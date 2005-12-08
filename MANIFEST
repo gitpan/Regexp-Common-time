@@ -1,0 +1,14 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+time.pm
+t/dmy.t
+t/doc.t
+t/hms.t
+t/mdy.t
+t/strftime.t
+t/tf.t
+t/ymd.t
+t/zone.t
+META.yml                                 Module meta-data (added by MakeMaker)
