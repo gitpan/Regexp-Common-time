@@ -8,13 +8,13 @@ Regexp::Common::time - Date and time regexps.
 
 =head1 VERSION
 
-This is version 0.01 of Regexp::Common::time, December 4, 2005.
+This is version 0.02 of Regexp::Common::time, May 23, 2008.
 
 =cut
 
 use strict;
 package Regexp::Common::time;
-$Regexp::Common::time::VERSION = '0.01';
+$Regexp::Common::time::VERSION = '0.02';
 use Regexp::Common qw(pattern);
 use POSIX;
 
@@ -25,12 +25,15 @@ BEGIN
 {
     eval
     {
-        use I18N::Langinfo qw(langinfo);
+        $can_locale = 0;
+        require I18N::Langinfo;
+        I18N::Langinfo->import(qw(langinfo));
+        $can_locale = 1;
     };
-    $can_locale = $@? 0 : 1;
 }
 
-our %master_pattern
+# Master list of patterns
+our %master
     = (
        c2   => q/\d{2}/,                                      # Century, 2 digits
        yr2  => q/\d{2}/,                                      # Year, 2 digits
@@ -64,6 +67,7 @@ our %master_pattern
        ampm => q/(?:(?=[AaPp])(?:[ap](?:m|\.m\.)?|[AP](?:M|\.M\.)?))/,    # am/pm indicator
        th   => q/(?:(?=[SNRTsnrt])(?:st|ST|nd|ND|rd|RD|th|TH))/,   # ordinal suffix
        tz   => q/(?:[-+](?:[01]\d|2[0-4])(?::?[0-5]\d)?|Z|GMT|UTC?|[ECMP][DS]T)/,    # Time zone
+       ema  => _get_abbr_month_pattern(1),                    # English month abbreviation
 
        # The following are locale-specific, and will be populated later
        mname => q/TBD/,     # Full month name
@@ -86,23 +90,23 @@ sub _nospace
 
 my $anymon;   # general-purpose month capture.  Set in _setup_locale().
 
-my $d = qq/$sdig|$master_pattern{dy2}/;
+my $d = qq/$sdig|$master{dy2}/;
 my $dcap  = qq/(?k:$d)/;
 
 # Separator pattern: allows for certain punctuation, or none, plus optional space.
 my $dsep = _nospace q{[-/. ]};
 
 # "Middle" day.  Must be surrounded by matching separators
-my $dmiddle  = _nospace qq{(?=(?>/$master_pattern{dy12}/|-$master_pattern{dy12}-| $master_pattern{dy12},? |\\.$master_pattern{dy12}\\.|(?!$dsep)$master_pattern{dy12}(?!$dsep)))$dsep?(?k:$master_pattern{dy12}),?$dsep?};
-my $d2middle = _nospace qq{(?=(?>/$master_pattern{dy2}/|-$master_pattern{dy2}-| $master_pattern{dy2},? |\\.$master_pattern{dy2}\\.|(?!$dsep)$master_pattern{dy2}(?!$dsep)))$dsep?(?k:$master_pattern{dy2}),?$dsep?};
+my $dmiddle  = _nospace qq{(?=(?>/$master{dy12}/|-$master{dy12}-| $master{dy12},? |\\.$master{dy12}\\.|(?!$dsep)$master{dy12}(?!$dsep)))$dsep?(?k:$master{dy12}),?$dsep?};
+my $d2middle = _nospace qq{(?=(?>/$master{dy2}/|-$master{dy2}-| $master{dy2},? |\\.$master{dy2}\\.|(?!$dsep)$master{dy2}(?!$dsep)))$dsep?(?k:$master{dy2}),?$dsep?};
 
 # "Middle" month.  Must be surrounded by matching separators
 my $mFULLmiddle;   # Full month pattern, in middle (ymd and dmy).  Set in _setup_locale().
-my $m2middle = _nospace qq{(?=(?>/$master_pattern{mo2}/|-$master_pattern{mo2}-| $master_pattern{mo2} |\\.$master_pattern{mo2}\\.|$master_pattern{mo2}(?!$dsep)))$dsep?(?k:$master_pattern{mo2})$dsep?};
+my $m2middle = _nospace qq{(?=(?>/$master{mo2}/|-$master{mo2}-| $master{mo2} |\\.$master{mo2}\\.|$master{mo2}(?!$dsep)))$dsep?(?k:$master{mo2})$dsep?};
 
 # "Middle" minute.  Must be surrounded by matching separators
 my $tsep = _nospace q/[:. ]/;
-my $min2middle = _nospace qq{(?=(?>:$master_pattern{mi2}:|\\.$master_pattern{mi2}\\.| $master_pattern{mi2} |$master_pattern{mi2}(?!$tsep)))$tsep?(?k:$master_pattern{mi2})$tsep?};
+my $min2middle = _nospace qq{(?=(?>:$master{mi2}:|\\.$master{mi2}\\.| $master{mi2} |$master{mi2}(?!$tsep)))$tsep?(?k:$master{mi2})$tsep?};
 
 
 # YMD builder
@@ -119,25 +123,25 @@ sub ymd
     # 'ymd' is the most flexible: year: 2/4 digits; month 1/2 digits or name; day 1/2 digits.
     if ($pattern eq 'ymd')
     {
-        return qq/(?k:$npd(?k:$master_pattern{yr24})$mFULLmiddle$dcap$nfd)/;
+        return qq/(?k:$npd(?k:$master{yr24})$mFULLmiddle$dcap$nfd)/;
     }
     # 'y4md': 4-digit year; 1 or 2 digit month and day.  Or named month.
     elsif ($pattern eq 'y4md')
     {
-        return qq/(?k:(?k:$master_pattern{yr4})$mFULLmiddle$dcap$nfd)/;
+        return qq/(?k:(?k:$master{yr4})$mFULLmiddle$dcap$nfd)/;
     }
     # 'y2md': 2-digit year; 1 or 2 digit month and day.
     elsif ($pattern eq 'y2md')
     {
-        return qq/(?k:(?k:$master_pattern{yr2})$mFULLmiddle$dcap$nfd)/;
+        return qq/(?k:(?k:$master{yr2})$mFULLmiddle$dcap$nfd)/;
     }
     elsif ($pattern eq 'y4m2d2'  ||  $pattern eq 'YMD')
     {
-        return qq/(?k:(?k:$master_pattern{yr4})$m2middle(?k:$master_pattern{dy2}))/;
+        return qq/(?k:(?k:$master{yr4})$m2middle(?k:$master{dy2}))/;
     }
     elsif ($pattern eq 'y2m2d2')
     {
-        return qq/(?k:(?k:$master_pattern{yr2})$m2middle(?k:$master_pattern{dy2}))/;
+        return qq/(?k:(?k:$master{yr2})$m2middle(?k:$master{dy2}))/;
     }
 
     # Probably the only way to get here is if I goof up and specify this subroutine
@@ -159,25 +163,25 @@ sub mdy
     # 'mdy' is the most flexible: year: 2/4 digits; month 1/2 digits or named; day 1/2 digits.
     if ($pattern eq 'mdy')
     {
-        return qq/(?k:$npd(?k:$anymon)$dmiddle(?k:$master_pattern{yr24})$nfd)/;
+        return qq/(?k:$npd(?k:$anymon)$dmiddle(?k:$master{yr24})$nfd)/;
     }
     # 'mdy4': 4-digit year; 1 or 2 digit month and day.
     elsif ($pattern eq 'mdy4')
     {
-        return qq/(?k:$npd(?k:$anymon)$dmiddle(?k:$master_pattern{yr4}))/;
+        return qq/(?k:$npd(?k:$anymon)$dmiddle(?k:$master{yr4}))/;
     }
     # 'mdy2': 2-digit year; 1 or 2 digit month and day.
     elsif ($pattern eq 'mdy2')
     {
-        return qq/(?k:$npd(?k:$anymon)$dmiddle(?k:$master_pattern{yr2}))/;
+        return qq/(?k:$npd(?k:$anymon)$dmiddle(?k:$master{yr2}))/;
     }
     elsif ($pattern eq 'm2d2y4'  ||  $pattern eq 'MDY')
     {
-        return qq/(?k:(?k:$master_pattern{mo2})$d2middle(?k:$master_pattern{yr4}))/;
+        return qq/(?k:(?k:$master{mo2})$d2middle(?k:$master{yr4}))/;
     }
     elsif ($pattern eq 'm2d2y2')
     {
-        return qq/(?k:(?k:$master_pattern{mo2})$d2middle(?k:$master_pattern{yr2}))/;
+        return qq/(?k:(?k:$master{mo2})$d2middle(?k:$master{yr2}))/;
     }
 
     # Probably the only way to get here is if I goof up and specify this subroutine
@@ -199,25 +203,25 @@ sub dmy
     # 'dmy' is the most flexible: year: 2/4 digits; month 1/2 digits; day 1/2 digits.
     if ($pattern eq 'dmy')
     {
-        return qq/(?k:$npd$dcap$mFULLmiddle(?k:$master_pattern{yr24})$nfd)/;
+        return qq/(?k:$npd$dcap$mFULLmiddle(?k:$master{yr24})$nfd)/;
     }
     # 'mdy4': 4-digit year; 1 or 2 digit month and day.
     elsif ($pattern eq 'dmy4')
     {
-        return qq/(?k:$npd$dcap$mFULLmiddle(?k:$master_pattern{yr4}))/;
+        return qq/(?k:$npd$dcap$mFULLmiddle(?k:$master{yr4}))/;
     }
     # 'y2md': 2-digit year; 1 or 2 digit month and day.
     elsif ($pattern eq 'dmy2')
     {
-        return qq/(?k:$npd$dcap$mFULLmiddle(?k:$master_pattern{yr2}))/;
+        return qq/(?k:$npd$dcap$mFULLmiddle(?k:$master{yr2}))/;
     }
     elsif ($pattern eq 'd2m2y4'  ||  $pattern eq 'DMY')
     {
-        return qq/(?k:(?k:$master_pattern{dy2})$m2middle(?k:$master_pattern{yr4}))/;
+        return qq/(?k:(?k:$master{dy2})$m2middle(?k:$master{yr4}))/;
     }
     elsif ($pattern eq 'd2m2y2')
     {
-        return qq/(?k:(?k:$master_pattern{dy2})$m2middle(?k:$master_pattern{yr2}))/;
+        return qq/(?k:(?k:$master{dy2})$m2middle(?k:$master{yr2}))/;
     }
 
     # Probably the only way to get here is if I goof up and specify this subroutine
@@ -232,49 +236,49 @@ sub hms
     my $sec    = q/\d\d/;      # Can't limit it to 00-59!  Because it's optional, and out-of-range = no match.
 
 #   my ($self, $flags_hr, $keys_ar) = @_;
-    return qq/(?k:$npd(?k:$master_pattern{hr12})$tsep/      # hour
-        .  qq/(?k:$master_pattern{mi2})/                    # minute
+    return qq/(?k:$npd(?k:$master{hr12})$tsep/      # hour
+        .  qq/(?k:$master{mi2})/                    # minute
         .  qq/(?:$tsep(?k:$sec))?/                          # second
-        .  qq/(?:\\s?(?k:$master_pattern{ampm}))?)/;        # am/pm
+        .  qq/(?:\\s?(?k:$master{ampm}))?)/;        # am/pm
 }
 
 # Time::Format-like builder
 
 my %tf =
     (
-     yyyy   => $master_pattern{yr4},
-     yy     => $master_pattern{yr2},
-    'm{on}' => $master_pattern{mo12},
-    'mm{on}'=> $master_pattern{mo2},
-    '?m{on}'=> $master_pattern{mo_2},
-     d      => $master_pattern{dy12},
-     dd     => $master_pattern{dy2},
-    '?d'    => $master_pattern{dy_2},
-     h      => $master_pattern{hr12},
-     hh     => $master_pattern{hr2},
-    '?h'    => $master_pattern{hr_2},
-     H      => $master_pattern{hx12},
-     HH     => $master_pattern{hx2},
-    '?H'    => $master_pattern{hx_2},
-    'm{in}' => $master_pattern{mi12},
-    'mm{in}'=> $master_pattern{mi2},
-    '?m{in}'=> $master_pattern{mi_2},
-     s      => $master_pattern{sc12},
-     ss     => $master_pattern{sc2},
-    '?s'    => $master_pattern{sc_2},
-     mmm    => $master_pattern{msec},
-     uuuuuu => $master_pattern{usec},
-     am     => $master_pattern{ampm},
-     AM     => $master_pattern{ampm},
-    'a.m.'  => $master_pattern{ampm},
-    'A.M.'  => $master_pattern{ampm},
-     pm     => $master_pattern{ampm},
-     PM     => $master_pattern{ampm},
-    'p.m.'  => $master_pattern{ampm},
-    'P.M.'  => $master_pattern{ampm},
-     th     => $master_pattern{th},
-     TH     => $master_pattern{th},
-     tz     => $master_pattern{tz},
+     yyyy   => $master{yr4},
+     yy     => $master{yr2},
+    'm{on}' => $master{mo12},
+    'mm{on}'=> $master{mo2},
+    '?m{on}'=> $master{mo_2},
+     d      => $master{dy12},
+     dd     => $master{dy2},
+    '?d'    => $master{dy_2},
+     h      => $master{hr12},
+     hh     => $master{hr2},
+    '?h'    => $master{hr_2},
+     H      => $master{hx12},
+     HH     => $master{hx2},
+    '?H'    => $master{hx_2},
+    'm{in}' => $master{mi12},
+    'mm{in}'=> $master{mi2},
+    '?m{in}'=> $master{mi_2},
+     s      => $master{sc12},
+     ss     => $master{sc2},
+    '?s'    => $master{sc_2},
+     mmm    => $master{msec},
+     uuuuuu => $master{usec},
+     am     => $master{ampm},
+     AM     => $master{ampm},
+    'a.m.'  => $master{ampm},
+    'A.M.'  => $master{ampm},
+     pm     => $master{ampm},
+     PM     => $master{ampm},
+    'p.m.'  => $master{ampm},
+    'P.M.'  => $master{ampm},
+     th     => $master{th},
+     TH     => $master{th},
+     tz     => $master{tz},
     );
 
 my %disam;    # Disambiguator for 'm' format.
@@ -364,36 +368,36 @@ sub tf_builder
 # strftime builder
 my %strftime =
     (
-     C => $master_pattern{c2},     # two-digit century
-     D =>"$master_pattern{mo2}/$master_pattern{dy2}/$master_pattern{yr2}",
-     d => $master_pattern{dy2},    # two-digit day
-     e => $master_pattern{dy_2},   # 1 or 2-digit day, leading space
-     H => $master_pattern{hr2},    # hour, 00-23
-     I => $master_pattern{hx2},    # hour, 01-12
-     j => $master_pattern{doy3},   # day-of-year, 001-366
-     m => $master_pattern{mo2},    # month, 01-12
-     M => $master_pattern{mi2},    # minute, 00-59
+     C => $master{c2},     # two-digit century
+     D =>"$master{mo2}/$master{dy2}/$master{yr2}",
+     d => $master{dy2},    # two-digit day
+     e => $master{dy_2},   # 1 or 2-digit day, leading space
+     H => $master{hr2},    # hour, 00-23
+     I => $master{hx2},    # hour, 01-12
+     j => $master{doy3},   # day-of-year, 001-366
+     m => $master{mo2},    # month, 01-12
+     M => $master{mi2},    # minute, 00-59
      n => "\n",
-     R =>"$master_pattern{hr2}:$master_pattern{mi2}",
-     S => $master_pattern{sc2},    # Second, 00-61
-     T =>"$master_pattern{hr2}:$master_pattern{mi2}:$master_pattern{sc2}",
+     R =>"$master{hr2}:$master{mi2}",
+     S => $master{sc2},    # Second, 00-61
+     T =>"$master{hr2}:$master{mi2}:$master{sc2}",
      t => "\t",
-     u => $master_pattern{wdx1},   # Weekday number, 1-7
-     U => $master_pattern{wnx2},   # Week number, 00-53
-     V => $master_pattern{wn2},    # Week number, 01-53
-     w => $master_pattern{wd1},    # Weekday number, 0-6
-     W => $master_pattern{wnx2},   # Week number, 00-53
-     y => $master_pattern{yr2},    # two-digit year
-     Y => $master_pattern{yr4},    # four-digit year
-     Z => $master_pattern{tz},     # time zone
+     u => $master{wdx1},   # Weekday number, 1-7
+     U => $master{wnx2},   # Week number, 00-53
+     V => $master{wn2},    # Week number, 01-53
+     w => $master{wd1},    # Weekday number, 0-6
+     W => $master{wnx2},   # Week number, 00-53
+     y => $master{yr2},    # two-digit year
+     Y => $master{yr4},    # four-digit year
+     Z => $master{tz},     # time zone
     '%' => '%',
 
      # additional useful patterns not specified by strftime
-     _d => $master_pattern{dy12},  # 1- or 2-digit day number
-     _H => $master_pattern{hr12},  # 1- or 2-digit 24-hour hour
-     _I => $master_pattern{hx12},  # 1- or 2-digit 12-hour hour
-     _m => $master_pattern{mo12},  # 1- or 2-digit month number
-     _M => $master_pattern{mi12},  # 1- or 2-digit minute
+     _d => $master{dy12},  # 1- or 2-digit day number
+     _H => $master{hr12},  # 1- or 2-digit 24-hour hour
+     _I => $master{hx12},  # 1- or 2-digit 12-hour hour
+     _m => $master{mo12},  # 1- or 2-digit month number
+     _M => $master{mi12},  # 1- or 2-digit minute
    );
 
 sub strftime_builder
@@ -450,6 +454,22 @@ sub strftime_builder
     return $pattern;
 }
 
+sub american
+{
+    my ($self, $flags_hr, $keys_ar) = @_;
+    _setup_locale();
+
+    return join '',
+           qq/(?k:\\b/,           # must start on word boundary
+           qq/(?k:$master{mname}|$master{mabbr})/,   # Month name or abbr
+           qq/ {1,2}/,            # one or two spaces
+           qq/(?k:$master{dy12})/,      # one- or two-digit day
+           qq/(?:,| |, )/,        # Comma or space or both
+           qq/(?k:'$master{yr2}|$master{yr24})/,     # Year: 'yy or yyyy or yy
+           qq/$nfd)/;             # No following digits
+}
+
+
 
 # Localization.
 # Bug: This is bulky and inefficient, and sets up many patterns that may never be used.
@@ -505,32 +525,32 @@ sub _setup_locale
     }
 
     # Update master patterns
-    $master_pattern{dname} = _get_full_weekday_pattern();
-    $master_pattern{dabbr} = _get_abbr_weekday_pattern();
-    $master_pattern{mname} = _get_full_month_pattern();
-    $master_pattern{mabbr} = _get_abbr_month_pattern();
-    $master_pattern{axpx}  = qq/(?:\Q$am_str\E|\Q$pm_str\E)/;
+    $master{dname} = _get_full_weekday_pattern();
+    $master{dabbr} = _get_abbr_weekday_pattern();
+    $master{mname} = _get_full_month_pattern();
+    $master{mabbr} = _get_abbr_month_pattern();
+    $master{axpx}  = qq/(?:\Q$am_str\E|\Q$pm_str\E)/;
 
     # Pattern variables for dmy-mdy-ymd patterns
-    $anymon = _nospace qq/(?>(?i)$master_pattern{mo2}|$sdig|$master_pattern{mname}|$master_pattern{mabbr})/;
+    $anymon = _nospace qq/(?>(?i)$master{mo2}|$sdig|$master{mname}|$master{mabbr})/;
     $mFULLmiddle = _nospace qq{(?=(?>/$anymon/|-$anymon-| $anymon |\\.$anymon\\.|(?!$dsep)$anymon(?!$dsep)))$dsep?(?k:$anymon)$dsep?};
 
     # Pattern variables for Time::Format
-    $tf{Weekday} = $tf{WEEKDAY} = $tf{weekday} = $master_pattern{dname};
-    $tf{Day}     = $tf{DAY}     = $tf{day}     = $master_pattern{dabbr};
-    $tf{Month}   = $tf{MONTH}   = $tf{month}   = $master_pattern{mname};
-    $tf{Mon}     = $tf{MON}     = $tf{mon}     = $master_pattern{mabbr};
+    $tf{Weekday} = $tf{WEEKDAY} = $tf{weekday} = $master{dname};
+    $tf{Day}     = $tf{DAY}     = $tf{day}     = $master{dabbr};
+    $tf{Month}   = $tf{MONTH}   = $tf{month}   = $master{mname};
+    $tf{Mon}     = $tf{MON}     = $tf{mon}     = $master{mabbr};
 
     # Pattern variables for strftime
-    $strftime{A} = $master_pattern{dname};
-    $strftime{a} = $master_pattern{dabbr};
-    $strftime{B} = $master_pattern{mname};
-    $strftime{b} = $master_pattern{mabbr};
+    $strftime{A} = $master{dname};
+    $strftime{a} = $master{dabbr};
+    $strftime{B} = $master{mname};
+    $strftime{b} = $master{mabbr};
     $strftime{h} = $strftime{b};    # defined synonym
-    $strftime{r} ="$master_pattern{hx2}:$master_pattern{mi2}:$master_pattern{sc2} (?:$am_str|$pm_str)",
+    $strftime{r} ="$master{hx2}:$master{mi2}:$master{sc2} (?:$am_str|$pm_str)",
 
     # Set up locale-dependent strftime patterns
-    $strftime{p} = $master_pattern{axpx};
+    $strftime{p} = $master{axpx};
     foreach ($dt_fmt, $d_fmt, $t_fmt, $t_ap_fmt)
     {
         # the "|| q{}" below is to avoid "uninitialized" warnings.
@@ -584,8 +604,9 @@ sub _get_full_month_pattern
 
 sub _get_abbr_month_pattern
 {
+    my $english_only = shift;
     my @Mon_Abbr;
-    if ($can_locale)
+    if (!$english_only  &&  $can_locale)
     {
         eval
         {
@@ -606,9 +627,9 @@ sub _get_abbr_month_pattern
                 );
         };
     }
-    if (!$can_locale  ||  $@)
+    if ($english_only  ||  !$can_locale  ||  $@)
     {
-        @Mon_Abbr = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct No Dec);
+        @Mon_Abbr = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
     }
 
     my $prematch = _first_chars(@Mon_Abbr);
@@ -647,8 +668,9 @@ sub _get_full_weekday_pattern
 
 sub _get_abbr_weekday_pattern
 {
+    my $english_only = shift;
     my @Day_Abbr;
-    if ($can_locale)
+    if (!$english_only  &&  $can_locale)
     {
         eval
         {
@@ -664,7 +686,7 @@ sub _get_abbr_weekday_pattern
                 );
         };
     }
-    if (!$can_locale  ||  $@)
+    if ($english_only  ||  !$can_locale  ||  $@)
     {
         @Day_Abbr = qw(Sun Mon Tue Wed Thu Fri Sat);
     }
@@ -711,10 +733,51 @@ for (qw(tf))
     pattern name   => ['time', $_],
             create => \&tf_builder,
 }
+for (qw(american))
+{
+    pattern name   => ['time', $_],
+            create => \&american,
+}
+
 
 my $dt_sep = q/(?:(?<=\\d)[T_ ](?=\\d))?/;
 pattern name => ['time', 'iso'],
-        create => qq/(?k:(?=\\d)(?:(?k:$master_pattern{yr4})$m2middle(?k:$master_pattern{dy2}))?$dt_sep(?:(?k:$master_pattern{hr2})$min2middle(?k:$master_pattern{sc2}))?)/;
+        create => join '',
+    qq/(?k:/,
+    qq/(?=\\d)/,     # Expect a digit
+    qq/(?:/,         # Begin optional date portion
+        qq/(?k:$master{yr4})/,   $m2middle,   qq/(?k:$master{dy2})/,
+    qq/)?/,          # End optional date portion
+    $dt_sep,
+    qq/(?:/,         # Begin optional time portion
+        qq/(?k:$master{hr2})/,  $min2middle,  qq/(?k:$master{sc2})/,
+    qq/)?)/;         # End optional time portion
+
+pattern name => ['time', 'mail'],
+    create => join '',
+                   qq/(?k:$npd/,    # No preceeding digit
+                   qq/(?=\\d)/,     # Expect a digit
+                   qq/(?k:$master{dy12})\\s*/,     # Day
+                   qq/(?k:$master{ema})\\s*/,      # Month (english name abbreviation)
+                   qq/(?k:$master{yr24})\\s+/,     # Year
+                   qq/(?k:$master{hr2}):/,         # Hour
+                   qq/(?k:$master{mi2}):/,         # Minute
+                   qq/(?k:$master{sc2})\\s*/,      # Second
+                   qq/(?k:$master{tz})/,           # Time zone
+                   qq/$nfd)/;       # No trailing digit
+
+pattern name => ['time', 'MAIL'],
+    create => join '',
+                   qq/(?k:$npd/,    # No preceeding digit
+                   qq/(?=\\d)/,     # Expect a digit
+                   qq/(?k:$master{dy12})\\s*/,     # Day
+                   qq/(?k:$master{ema})\\s*/,      # Month (english name abbreviation)
+                   qq/(?k:$master{yr4})\\s+/,      # Year
+                   qq/(?k:$master{hr2}):/,         # Hour
+                   qq/(?k:$master{mi2}):/,         # Minute
+                   qq/(?k:$master{sc2})\\s*/,      # Second
+                   qq/(?k:[-+]\\d{4})/,            # Time zone
+                   qq/$nfd)/;       # No trailing digit
 
 
 1;
@@ -732,6 +795,13 @@ __END__
 
  # Match ISO8601-style date/time strings
  $RE{time}{iso}
+
+ # Match RFC2822-style date/time strings
+ $RE{time}{mail}
+ $RE{time}{MAIL}    # more-strict matching
+
+ # Match informal American date strings
+ $RE{time}{american}
 
  # Fuzzy date patterns
  #               YEAR/MONTH/DAY
@@ -764,7 +834,7 @@ dates and times.  See L<Regexp::Common> for a general description of
 how to use this interface.
 
 Parsing dates is a dirty business. Dates are generally specified in
-one of three possible orders: year/month/day, month/day/year, and
+one of three possible orders: year/month/day, month/day/year, or
 day/month/year.  Years can be specified with four digits or with two
 digits (with assumptions made about the century).  Months can be
 specified as one digit, two digits, as a spelled-out name, or as a
@@ -778,12 +848,32 @@ refer to the same date, but it's tricky to get a program to come to
 the same conclusion.  This module attempts to make it possible to do
 so, with a minimum of difficulty.
 
+=over 4
+
+=item *
+
 If you know the exact format of the data to be matched, use one of the
-specific, piecemeal pattern builders: C<tf> or C<strftime>.  If there
-is some variability, use one of the fuzzy-matching patterns in the
-C<dmy>, C<mdy>, or C<ymd> families.  If the data are wildly variable,
-such as raw user input, give up and use the L<Date::Manip> or
-L<Date::Parse> module.
+specific, piecemeal pattern builders: C<tf> or C<strftime>.
+
+=item *
+
+If you are parsing RFC-2822 mail headers, use the C<mail> pattern.
+
+=item *
+
+If you are parsing informal American dates, use the C<american> pattern.
+
+=item *
+
+If there is some variability in your input data, use one of the
+fuzzy-matching patterns in the C<dmy>, C<mdy>, or C<ymd> families.
+
+=item *
+
+If the data are wildly variable, such as raw user input, you should
+probably give up and use L<Date::Manip> or L<Date::Parse>.
+
+=back
 
 Time values are generally much simpler to parse than date values.
 Only one fuzzy pattern is provided, and it should suffice for most
@@ -793,8 +883,7 @@ needs.
 
 The L<Time::Format> module uses simple, intuitive strings for
 specifying date and time formats.  You can use these patterns here as
-well.  See the L<Time::Format> module for details about its format
-specifiers.
+well.  See L<Time::Format> for details about its format specifiers.
 
 I<Example:>
 
@@ -820,32 +909,33 @@ and ISO8601 as much as possible.  The following time zones are matched:
 The POSIX C<strftime> function is a long-recognized standard for
 formatting dates and times.  This module supports most of C<stftime>'s
 codes for matching; specifically, the C<aAbBcCDdeHIjmMnprRSTtuUVwWyxXYZ%>
-codes.  See above for how the C<%Z> format matches time zones.
+codes.  The C<%Z> format matches time zones in the same manner as
+described above under L</Time::Format PATTERNS>.
 
 Also, this module provides the following nonstandard codes:
 
-C<   %_d  > 1- or 2-digit day number (1-31)
+C<   %_d  -> 1- or 2-digit day number (1-31)
 
-C<   %_H  > 1- or 2-digit hour (0-23)
+C<   %_H  -> 1- or 2-digit hour (0-23)
 
-C<   %_I  > 1- or 2-digit hour (1-12)
+C<   %_I  -> 1- or 2-digit hour (1-12)
 
-C<   %_m  > 1- or 2-digit month number (1-12)
+C<   %_m  -> 1- or 2-digit month number (1-12)
 
-C<   %_M  > 1- or 2-digit minute (0-59)
+C<   %_M  -> 1- or 2-digit minute (0-59)
 
 I<Example:>
 
     $str = 'Thu November 2, 2005';
     $str =~ $RE{time}{strftime}{-pat => '%a %B %_d, %Y'};
 
-As above, the patterns can contain more complex regexp expressions as well:
+The patterns can contain more complex regexp expressions as well:
 
     $str =~ $RE{time}{strftime}{-pat => '(%A|%a)? (%B|%b) ?%_d, %Y'};
 
 =head1 ISO-8601 DATE/TIME MATCHING
 
-The C<$RE{time}{iso}> pattern will match many (most?) strings
+The C<$RE{time}{iso}> pattern will match many (most? all?) strings
 formatted as recommended by ISO-8601.  The canonical ISO-8601 form is:
 
     YYYY-MM-DDTHH:MM:SS
@@ -884,6 +974,41 @@ If the date is not omitted, all three of its components must be present.
 If the time is not omitted, all three of its components must be present.
 
 =back
+
+=head1 RFC 2822 MATCHING
+
+RFC 2822 specifies the format of date/time values in e-mail message
+headers.  In a nutshell, the format is:
+
+    dd Mon yyyy hh:mm:ss +zzzz
+
+where C<dd> is the day of the month; C<Mon> is the abbreviated month
+name (apparently always in English); C<yyyy> is the year; C<hh:mm:ss>
+is the time; and C<+zzzz> is the time zone, generally specified as an
+offset from GMT.
+
+RFC 2822 requires that the weekday also be specified, but this module
+ignores the weekday, as it is redundant and only supplied for human
+readability.
+
+RFC 2822 requires that older, obsolete date forms be specified as
+well; for example, alphanumeric time zone codes (e.g. EDT).  This
+module's C<mail> allows for these obsolete date forms.  If you want
+to match only the proper date forms recommended by RFC 2822, you can
+use the C<MAIL> pattern instead.
+
+In either case, C<mail> or C<MAIL>, the pattern generated is very
+flexible about whitespace.  The main differences are: with C<MAIL>,
+two-digit years are not permitted, and the time zone must be four
+digits preceded by a + or - sign.
+
+=head1 INFORMAL AMERICAN MATCHING
+
+People in North America, particularly in the United States, are fond
+of specifying dates as "Month dd, yyyy", or sometimes with a two-digit
+year and apostrophe: "Month dd, 'yy".  The C<american> pattern matches
+this style of date.  It allows either a month name or abbreviation,
+and is flexible with respect to commas and whitespace.
 
 =head1 FUZZY PATTERN OVERVIEW
 
@@ -1094,66 +1219,97 @@ are responsible for all capturing.
 
 The C<iso> pattern captures:
 
-C<  $1   > the entire match
+C<  $1  -> the entire match
 
-C<  $2   > the year
+C<  $2  -> the year
 
-C<  $3   > the month
+C<  $3  -> the month
 
-C<  $4   > the day
+C<  $4  -> the day
 
-C<  $5   > the hour
+C<  $5  -> the hour
 
-C<  $6   > the minute
+C<  $6  -> the minute
 
-C<  $7   > the second
+C<  $7  -> the second
 
 The year, month, and day (C<$2>, C<$3>, and C<$4>) will be C<undef> if
 the matched string contains only a time value (e.g., "12:34:56").  The
 hour, minute, and second (C<$5>, C<$6>, and C<$7>) will be C<undef> if
 the matched string contains only a date value (e.g., "2005-01-23").
 
+
+The C<mail> and C<MAIL> patterns capture:
+
+C<  $1  -> the entire match
+
+C<  $2  -> the day
+
+C<  $3  -> the month
+
+C<  $4  -> the year
+
+C<  $5  -> the hour
+
+C<  $6  -> the minute
+
+C<  $7  -> the second
+
+C<  $8  -> the time zone
+
+
+The C<american> pattern captures:
+
+C<  $1  -> the entire match
+
+C<  $2  -> the month
+
+C<  $3  -> the day
+
+C<  $4  -> the year
+
+
 The fuzzy y/m/d patterns capture
 
-C<  $1   > the entire match
+C<  $1  -> the entire match
 
-C<  $2   > the year
+C<  $2  -> the year
 
-C<  $3   > the month
+C<  $3  -> the month
 
-C<  $4   > the day
+C<  $4  -> the day
 
 The fuzzy m/d/y patterns capture
 
-C<  $1   > the entire match
+C<  $1  -> the entire match
 
-C<  $2   > the month
+C<  $2  -> the month
 
-C<  $3   > the day
+C<  $3  -> the day
 
-C<  $4   > the year
+C<  $4  -> the year
 
 The fuzzy d/m/y patterns capture
 
-C<  $1   > the entire match
+C<  $1  -> the entire match
 
-C<  $2   > the day
+C<  $2  -> the day
 
-C<  $3   > the month
+C<  $3  -> the month
 
-C<  $4   > the year
+C<  $4  -> the year
 
 The fuzzy h/m/s pattern captures
 
-C<  $1   > the entire match
+C<  $1  -> the entire match
 
-C<  $2   > the hour
+C<  $2  -> the hour
 
-C<  $3   > the minute
+C<  $3  -> the minute
 
-C<  $4   > the second  (C<undef> if omitted)
+C<  $4  -> the second  (C<undef> if omitted)
 
-C<  $5   > the am/pm indicator (C<undef> if omitted)
+C<  $5  -> the am/pm indicator (C<undef> if omitted)
 
 =head1 EXAMPLES
 
@@ -1225,26 +1381,41 @@ L<Test::More> is required for the test suite.
 
 =head1 AUTHOR / COPYRIGHT
 
-Eric J. Roode, roode@cpan.org
+Copyright (c) 2005-2008 by Eric J. Roode, ROODE I<-at-> cpan I<-dot-> org
 
-Copyright (c) 2005 by Eric J. Roode.  All Rights Reserved.
-This module is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+All rights reserved.
 
 To avoid my spam filter, please include "Perl", "module", or this
 module's name in the message's subject line, and/or GPG-sign your
 message.
+
+This module is copyrighted only to ensure proper attribution of
+authorship and to ensure that it remains available to all.  This
+module is free, open-source software.  This module may be freely used
+for any purpose, commercial, public, or private, provided that proper
+credit is given, and that no more-restrictive license is applied to
+derivative (not dependent) works.
+
+Substantial efforts have been made to ensure that this software meets
+high quality standards; however, no guarantee can be made that there
+are no undiscovered bugs, and no warranty is made as to suitability to
+any given use, including merchantability.  Should this module cause
+your house to burn down, your dog to collapse, your heart-lung machine
+to fail, your spouse to desert you, or George Bush to be re-elected, I
+can offer only my sincere sympathy and apologies, and promise to
+endeavor to improve the software.
+
 
 =cut
 
 =begin gpg
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (Cygwin)
+Version: GnuPG v1.4.9 (Cygwin)
 
-iD8DBQFDkwgOY96i4h5M0egRAp9fAKCVu+1MoOc1hJ8CLu3BCe4fj0H+AQCeOVNj
-C1faUUZpKbPbyJ2pg9UGYnc=
-=tQuw
+iEYEARECAAYFAkg3L5MACgkQwoSYc5qQVqqTQQCfeUeObeFdusp29rHMCMUbhkkU
+9wEAn19gjUe9ANUTzl34VG4tVh9zfXlq
+=FXwZ
 -----END PGP SIGNATURE-----
 
 =end gpg

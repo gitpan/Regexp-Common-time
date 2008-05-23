@@ -1,13 +1,20 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Regexp-Common-time
-version:      0.01
-version_from: time.pm
-installdirs:  site
-requires:
-    POSIX:                         0
-    Regexp::Common:                2.116
-    Test::Simple:                  0.40
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+---
+name: Regexp-Common-time
+version: 0.02
+author:
+  - 'Eric J. Roode <eroode@barrack.com>'
+abstract: Date and time regexps.
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+build_requires:
+  POSIX: 0
+  Test::More: 0.40
+provides:
+  Regexp::Common::time:
+    file: lib/Regexp/Common/time.pm
+    version: 0.02
+generated_by: Module::Build version 0.280801
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

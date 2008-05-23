@@ -5,6 +5,12 @@ use vars qw(@MONTH @MON @WEEKDAY @DAY);
 BEGIN
 {
     # Man, this locale stuff is a pain.  Why can't everyone just speak English?!
+
+    # First set defaults:
+    @MONTH = qw(January February March April May June July August September October November December);
+    @MON = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+    @WEEKDAY = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
+    @DAY = qw(Sun Mon Tue Wed Thu Fri Sat);
     eval
     {
         require POSIX;
@@ -14,37 +20,21 @@ BEGIN
         {
             @MONTH = map I18N::Langinfo::langinfo($_), I18N::Langinfo::MON_1(), I18N::Langinfo::MON_2(), I18N::Langinfo::MON_3(), I18N::Langinfo::MON_4(), I18N::Langinfo::MON_5(), I18N::Langinfo::MON_6(), I18N::Langinfo::MON_7(), I18N::Langinfo::MON_8(), I18N::Langinfo::MON_9(), I18N::Langinfo::MON_10(), I18N::Langinfo::MON_11(), I18N::Langinfo::MON_12();
         };
-        if ($@)
-        {
-            @MONTH = qw(January February March April May June July August September October November December);
-        }
 
         eval
         {
             @MON = map I18N::Langinfo::langinfo($_), I18N::Langinfo::ABMON_1(), I18N::Langinfo::ABMON_2(), I18N::Langinfo::ABMON_3(), I18N::Langinfo::ABMON_4(), I18N::Langinfo::ABMON_5(), I18N::Langinfo::ABMON_6(), I18N::Langinfo::ABMON_7(), I18N::Langinfo::ABMON_8(), I18N::Langinfo::ABMON_9(), I18N::Langinfo::ABMON_10(), I18N::Langinfo::ABMON_11(), I18N::Langinfo::ABMON_12();
         };
-        if ($@)
-        {
-            @MON = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
-        }
 
         eval
         {
             @WEEKDAY = map I18N::Langinfo::langinfo($_), I18N::Langinfo::DAY_1(), I18N::Langinfo::DAY_2(), I18N::Langinfo::DAY_3(), I18N::Langinfo::DAY_4(), I18N::Langinfo::DAY_5(), I18N::Langinfo::DAY_6(), I18N::Langinfo::DAY_7();
         };
-        if ($@)
-        {
-            @WEEKDAY = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
-        }
 
         eval
         {
             @DAY = map I18N::Langinfo::langinfo($_), I18N::Langinfo::ABDAY_1(), I18N::Langinfo::ABDAY_2(), I18N::Langinfo::ABDAY_3(), I18N::Langinfo::ABDAY_4(), I18N::Langinfo::ABDAY_5(), I18N::Langinfo::ABDAY_6(), I18N::Langinfo::ABDAY_7();
         };
-        if ($@)
-        {
-            @DAY = qw(Sun Mon Tue Wed Thu Fri Sat);
-        }
     };
 
     # target, pattern, values, name

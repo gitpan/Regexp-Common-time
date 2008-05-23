@@ -21,7 +21,7 @@ BEGIN
         ($Jan, $Feb, $Mar, $Apr, $May, $Jun, $Jul, $Aug, $Sep, $Oct, $Nov, $Dec)
             = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
         ($January, $February, $March, $April, $MayFull, $June, $July, $August, $September, $October, $November, $December)
-            = qw(January February March April MayFull June July August September October November December);
+            = qw(January February March April May June July August September October November December);
     }
 
     @match = (
@@ -416,7 +416,7 @@ BEGIN
               [ "1 $February 2005",  "dmy", [], 1, [ "1 $February 2005",   '1', $February , 2005]],
               [ "2 $March 2005",     "dmy", [], 1, [ "2 $March 2005",      '2', $March    , 2005]],
               ["09 $April 2005",     "dmy", [], 1, ["09 $April 2005",     '09', $April    , 2005]],
-              [ "9 $MayFull 2005",       "dmy", [], 1, [ "9 $MayFull 2005",        '9', $MayFull      , 2005]],
+              [ "9 $MayFull 2005",   "dmy", [], 1, [ "9 $MayFull 2005",        '9', $MayFull      , 2005]],
               ["10 $June 2005",      "dmy", [], 1, ["10 $June 2005",      '10', $June     , 2005]],
               ["11 $July 2005",      "dmy", [], 1, ["11 $July 2005",      '11', $July     , 2005]],
               ["19 $August 2005",    "dmy", [], 1, ["19 $August 2005",    '19', $August   , 2005]],

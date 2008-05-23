@@ -6,6 +6,7 @@ BEGIN
 # hms tests.
               # Base case
               ['10:23:45am', 'hms', [], 1, [qw(10:23:45am 10 23 45 am)]],
+
               # am/pm variations
               ['10:23:45a',     'hms', [], 1, [q(10:23:45a),     qw(10 23 45 a)]],
               ['10:23:45am',    'hms', [], 1, [q(10:23:45am),    qw(10 23 45 am)]],

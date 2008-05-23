@@ -1,4 +1,8 @@
-Revision history for Perl extension Regexp::Common::time
+Revision history for Perl extension Regexp::Common::time.
 
 0.01  2005 December 4
-	- First version
+      - First version
+
+0.02  23 May 2008
+      - Add mail, MAIL, and american formats.
+      - Fix many broken test cases.
