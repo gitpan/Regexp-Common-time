@@ -7,8 +7,9 @@ WriteMakefile(
     PREREQ_PM         =>
     {
      'Test::More'      =>  '0.40',
+     'Regexp::Common'  =>  0,
      'POSIX'           =>  0,
-    }
+    },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Regexp/Common/time.pm', # retrieve abstract from module
        AUTHOR         => 'eroode <eroode@barrack.com>') : ()),

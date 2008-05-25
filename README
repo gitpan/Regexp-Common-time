@@ -1,4 +1,4 @@
-Regexp::Common::time v0.02
+Regexp::Common::time v0.03
 ==========================
 
 This is a Regexp::Common plugin that provides regular expressions for
@@ -10,6 +10,10 @@ parsing dates and times.  It can handle most date formats, such as:
     2005 April 2        April 2, 2005       2 APR 05
     05APRIL02           APR022005           02 April 2005
     20050402            040205              02042005
+
+      ISO 8601            RFC 2822
+  2008-05-24T21:46:01   25 May 2008 21:46:01 +0500
+
 
 It can also handle time formats like:
 
@@ -57,7 +61,7 @@ Also, Time::Normalize is likely to be useful to you.
 
 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2008 by Eric J. Roode, ROODE I<-at-> cpan I<-dot-> org
+Copyright (c) 2005-2008 by Eric J. Roode, ROODE -at- cpan -dot- org
 
 All rights reserved.
 
@@ -73,6 +77,6 @@ high quality standards; however, no guarantee can be made that there
 are no undiscovered bugs, and no warranty is made as to suitability to
 any given use, including merchantability.  Should this module cause
 your house to burn down, your dog to collapse, your heart-lung machine
-to fail, your spouse to desert you, or George Bush to be re-elected, I
-can offer only my sincere sympathy and apologies, and promise to
+to fail, your spouse to desert you, or George Bush to be re-elected,
+I can offer only my sincere sympathy and apologies, and promise to
 endeavor to improve the software.

@@ -10,6 +10,12 @@ my $builder = Module::Build->new(
     build_requires =>
     {
      'Test::More'      =>  '0.40',
+     'Regexp::Common'  =>  0,
+     'POSIX'           =>  0,
+    },
+    requires =>
+    {
+     'Regexp::Common'  =>  0,
      'POSIX'           =>  0,
     },
     sign => 1,

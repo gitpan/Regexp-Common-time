@@ -8,21 +8,28 @@ Regexp::Common::time - Date and time regexps.
 
 =head1 VERSION
 
-This is version 0.02 of Regexp::Common::time, May 23, 2008.
+This is version 0.03 of Regexp::Common::time, May 25, 2008.
 
 =cut
 
 use strict;
 package Regexp::Common::time;
-$Regexp::Common::time::VERSION = '0.02';
+$Regexp::Common::time::VERSION = '0.03';
 use Regexp::Common qw(pattern);
 use POSIX;
 
 sub _croak { require Carp; goto &Carp::croak}
 
 my $can_locale;
+my $can_posix;
 BEGIN
 {
+    eval
+    {
+        $can_posix = 0;
+        require POSIX;
+        $can_posix = 1;
+    };
     eval
     {
         $can_locale = 0;
@@ -479,7 +486,7 @@ sub _setup_locale
 {
     # Do nothing if locale has not changed since we set it up
     my $current_locale;
-    $current_locale = POSIX::setlocale(POSIX::LC_TIME());
+    $current_locale = $can_posix?  POSIX::setlocale(POSIX::LC_TIME())  :  q{};
     $current_locale = q{} if  !defined $current_locale;
 
     # No changes needed
@@ -935,8 +942,8 @@ The patterns can contain more complex regexp expressions as well:
 
 =head1 ISO-8601 DATE/TIME MATCHING
 
-The C<$RE{time}{iso}> pattern will match many (most? all?) strings
-formatted as recommended by ISO-8601.  The canonical ISO-8601 form is:
+The C<$RE{time}{iso}> pattern will match most (all?) strings formatted
+as recommended by ISO-8601.  The canonical ISO-8601 form is:
 
     YYYY-MM-DDTHH:MM:SS
 
@@ -991,11 +998,11 @@ RFC 2822 requires that the weekday also be specified, but this module
 ignores the weekday, as it is redundant and only supplied for human
 readability.
 
-RFC 2822 requires that older, obsolete date forms be specified as
-well; for example, alphanumeric time zone codes (e.g. EDT).  This
-module's C<mail> allows for these obsolete date forms.  If you want
-to match only the proper date forms recommended by RFC 2822, you can
-use the C<MAIL> pattern instead.
+RFC 2822 requires that older, obsolete date forms be allowed as well;
+for example, alphanumeric time zone codes (e.g. EDT).  This module's
+C<mail> allows for these obsolete date forms.  If you want to match
+only the proper date forms recommended by RFC 2822, you can use the
+C<MAIL> pattern instead.
 
 In either case, C<mail> or C<MAIL>, the pattern generated is very
 flexible about whitespace.  The main differences are: with C<MAIL>,
@@ -1279,6 +1286,7 @@ C<  $3  -> the month
 
 C<  $4  -> the day
 
+
 The fuzzy m/d/y patterns capture
 
 C<  $1  -> the entire match
@@ -1289,6 +1297,7 @@ C<  $3  -> the day
 
 C<  $4  -> the year
 
+
 The fuzzy d/m/y patterns capture
 
 C<  $1  -> the entire match
@@ -1298,6 +1307,7 @@ C<  $2  -> the day
 C<  $3  -> the month
 
 C<  $4  -> the year
+
 
 The fuzzy h/m/s pattern captures
 
@@ -1310,6 +1320,7 @@ C<  $3  -> the minute
 C<  $4  -> the second  (C<undef> if omitted)
 
 C<  $5  -> the am/pm indicator (C<undef> if omitted)
+
 
 =head1 EXAMPLES
 
@@ -1372,10 +1383,9 @@ for performing this repetitive, error-prone task.
 
 Requires L<Regexp::Common>, of course.
 
-Also requires L<POSIX>.
-
-If L<I18N::Langinfo> is available, this module will use it; otherwise,
-it will use hardcoded English values for month and weekday names.
+If L<POSIX> and L<I18N::Langinfo> are available, this module will use
+them; otherwise, it will use hardcoded English values for month and
+weekday names.
 
 L<Test::More> is required for the test suite.
 
@@ -1413,9 +1423,9 @@ endeavor to improve the software.
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (Cygwin)
 
-iEYEARECAAYFAkg3L5MACgkQwoSYc5qQVqqTQQCfeUeObeFdusp29rHMCMUbhkkU
-9wEAn19gjUe9ANUTzl34VG4tVh9zfXlq
-=FXwZ
+iEYEARECAAYFAkg5ZYoACgkQwoSYc5qQVqr8wACfaNljWjMNpy28FvdjpZuWMWmr
+VaAAnjpB6xwlDeoSQrKpFdehQIghzX+X
+=qPP1
 -----END PGP SIGNATURE-----
 
 =end gpg
