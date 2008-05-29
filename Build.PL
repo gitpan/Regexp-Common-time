@@ -1,17 +1,21 @@
 use strict;
 use warnings;
-use Module::Build;
+
+eval {require Module::Build};
+if ($@)
+{
+    warn "Module::Build is required for Build.PL\n";
+    exit 0;
+}
 
 my $builder = Module::Build->new(
     module_name         => 'Regexp::Common::time',
-    license             => 'perl',
+    license             => 'unrestricted',
     dist_author         => 'Eric J. Roode <eroode@barrack.com>',
     dist_version_from   => 'lib/Regexp/Common/time.pm',
     build_requires =>
     {
      'Test::More'      =>  '0.40',
-     'Regexp::Common'  =>  0,
-     'POSIX'           =>  0,
     },
     requires =>
     {

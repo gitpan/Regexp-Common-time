@@ -1,4 +1,4 @@
-Regexp::Common::time v0.03
+Regexp::Common::time v0.04
 ==========================
 
 This is a Regexp::Common plugin that provides regular expressions for
@@ -61,22 +61,12 @@ Also, Time::Normalize is likely to be useful to you.
 
 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2008 by Eric J. Roode, ROODE -at- cpan -dot- org
+Eric J. Roode, roode @ cpan . org
 
-All rights reserved.
+Copyright (c) 2005-2008 by Eric J. Roode. All Rights Reserved.
+This module is free software; See the copyright notice in the
+module source code for full details.
 
-This module is copyrighted only to ensure proper attribution of
-authorship and to ensure that it remains available to all.  This
-module is free, open-source software.  This module may be freely used
-for any purpose, commercial, public, or private, provided that proper
-credit is given, and that no more-restrictive license is applied to
-derivative (not dependent) works.
-
-Substantial efforts have been made to ensure that this software meets
-high quality standards; however, no guarantee can be made that there
-are no undiscovered bugs, and no warranty is made as to suitability to
-any given use, including merchantability.  Should this module cause
-your house to burn down, your dog to collapse, your heart-lung machine
-to fail, your spouse to desert you, or George Bush to be re-elected,
-I can offer only my sincere sympathy and apologies, and promise to
-endeavor to improve the software.
+To avoid my spam filter, please include "Perl", "module", or this
+module's name in the message's subject line, and/or GPG-sign your
+message.

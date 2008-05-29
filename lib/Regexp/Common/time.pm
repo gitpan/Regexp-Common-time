@@ -8,13 +8,13 @@ Regexp::Common::time - Date and time regexps.
 
 =head1 VERSION
 
-This is version 0.03 of Regexp::Common::time, May 25, 2008.
+This is version 0.04 of Regexp::Common::time, May 29, 2008.
 
 =cut
 
 use strict;
 package Regexp::Common::time;
-$Regexp::Common::time::VERSION = '0.03';
+$Regexp::Common::time::VERSION = '0.04';
 use Regexp::Common qw(pattern);
 use POSIX;
 
@@ -572,7 +572,7 @@ sub _setup_locale
 sub _first_chars
 {
     my %uniq = map {substr ($_,0,1) => 1} @_;
-    return join q{}, keys %uniq;
+    return join q{}, map quotemeta, keys %uniq;
 }
 
 sub _get_full_month_pattern
@@ -605,7 +605,7 @@ sub _get_full_month_pattern
     }
 
     my $prematch = _first_chars(@Mon_Name);
-    my $alternat = join '|', @Mon_Name;
+    my $alternat = join '|', map quotemeta, @Mon_Name;
     return qq/(?=[$prematch])(?>$alternat)/;
 }
 
@@ -640,7 +640,7 @@ sub _get_abbr_month_pattern
     }
 
     my $prematch = _first_chars(@Mon_Abbr);
-    my $alternat = join '|', @Mon_Abbr;
+    my $alternat = join '|', map quotemeta, @Mon_Abbr;
     return qq/(?=[$prematch])(?>$alternat)/;
 }
 
@@ -669,7 +669,7 @@ sub _get_full_weekday_pattern
     }
 
     my $prematch = _first_chars(@Day_Name);
-    my $alternat = join '|', @Day_Name;
+    my $alternat = join '|', map quotemeta, @Day_Name;
     return qq/(?=[$prematch])(?>$alternat)/;
 }
 
@@ -699,7 +699,7 @@ sub _get_abbr_weekday_pattern
     }
 
     my $prematch = _first_chars(@Day_Abbr);
-    my $alternat = join '|', @Day_Abbr;
+    my $alternat = join '|', map quotemeta, @Day_Abbr;
     return qq/(?=[$prematch])(?>$alternat)/;
 }
 
@@ -1340,23 +1340,29 @@ C<  $5  -> the am/pm indicator (C<undef> if omitted)
  $record = "10-SEP-2005";
 
  # This block tries M-D-Y first, then D-M-Y, then Y-M-D
- if ( ((undef,$m,$d,$y) = $record =~ /^$RE{time}{mdy}{-keep}/)
-  ||  ((undef,$d,$m,$y) = $record =~ /^$RE{time}{dmy}{-keep}/)
-  ||  ((undef,$y,$m,$d) = $record =~ /^$RE{time}{ymd}{-keep}/) )
+ my $matched;
+ foreach my $pattern (qw(mdy dmy ymd))
  {
-     eval {($year, $month, $day) = normalize_ymd($y, $m, $d)};
+     @values = $record =~ /^$RE{time}{$pattern}{-keep}/
+         or next;
+
+     $matched = $pattern;
  }
- else      # give up
+ if ($matched)
  {
-     ... # handle bogus data (no match)
+     eval{ ($year, $month, $day) = normalize_rct($matched, @values) };
+     if ($@)
+     {
+         .... # handle erroneous data
+     }
  }
- #
- if ($@)
+ else
  {
-     ... # handle bogus data (erroneous)
+     .... # no match
  }
  #
  # $day is now 10; $month is now 09; $year is now 2005.
+
 
  # Time examples
 
@@ -1423,9 +1429,9 @@ endeavor to improve the software.
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.9 (Cygwin)
 
-iEYEARECAAYFAkg5ZYoACgkQwoSYc5qQVqr8wACfaNljWjMNpy28FvdjpZuWMWmr
-VaAAnjpB6xwlDeoSQrKpFdehQIghzX+X
-=qPP1
+iEYEARECAAYFAkg+1soACgkQwoSYc5qQVqoYRQCffGBoTopPnSbhpbNer2Zz/yXQ
+zoAAnR2X0tzw4+5AVKBb3PpbnuJ5EcT5
+=murM
 -----END PGP SIGNATURE-----
 
 =end gpg
