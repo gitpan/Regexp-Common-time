@@ -1,20 +1,16 @@
-=for gpg
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
 =head1 NAME
 
 Regexp::Common::time - Date and time regexps.
 
 =head1 VERSION
 
-This is version 0.04 of Regexp::Common::time, May 29, 2008.
+This is version 0.05 of Regexp::Common::time, Nov 20, 2013.
 
 =cut
 
 use strict;
 package Regexp::Common::time;
-$Regexp::Common::time::VERSION = '0.04';
+$Regexp::Common::time::VERSION = '0.05';
 use Regexp::Common qw(pattern);
 use POSIX;
 
@@ -1424,14 +1420,3 @@ endeavor to improve the software.
 
 =cut
 
-=begin gpg
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (Cygwin)
-
-iEYEARECAAYFAkg+1soACgkQwoSYc5qQVqoYRQCffGBoTopPnSbhpbNer2Zz/yXQ
-zoAAnR2X0tzw4+5AVKBb3PpbnuJ5EcT5
-=murM
------END PGP SIGNATURE-----
-
-=end gpg
