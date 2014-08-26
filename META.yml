@@ -3,21 +3,23 @@ abstract: 'Date and time regexps.'
 author:
   - 'Eric J. Roode <eroode@barrack.com>'
 build_requires:
-  Test::More: 0.40
+  Test::More: '0.40'
 configure_requires:
-  Module::Build: 0.40
+  ExtUtils::MakeMaker: '0'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4007, CPAN::Meta::Converter version 2.120921'
+generated_by: 'ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.142060'
 license: unrestricted
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+  version: '1.4'
 name: Regexp-Common-time
-provides:
-  Regexp::Common::time:
-    file: lib/Regexp/Common/time.pm
-    version: 0.05
+no_index:
+  directory:
+    - t
+    - inc
 requires:
-  POSIX: 0
-  Regexp::Common: 0
-version: 0.05
+  POSIX: '0'
+  Regexp::Common: '0'
+resources:
+  repository: git://github.com/szabgab/Regexp-Common-time.git
+version: '0.06'
